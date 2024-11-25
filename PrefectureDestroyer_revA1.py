@@ -3,71 +3,72 @@
 
 # In[169]:
 
-
+import asyncio
+from desktop_notifier import DesktopNotifier
+from time import sleep
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-
 
 # In[170]:
 
 
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
 
+async def notif(title, message):
+    await notifier.send(title, message)
 
 # In[171]:
 
-
+notifier = DesktopNotifier()
 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--disable-extensions")
 chrome_options.add_argument("--incognito")
-browser = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
+chrome_options.add_argument("--log-level=1")
+browser = webdriver.Chrome(options=chrome_options)
 
 
 # In[172]:
 
-
 outcome = False
-while outcome != True:
-    browser.get("https://www.seine-saint-denis.gouv.fr/booking/create/9845")
-    assert "Pôle 'vie privée et familiale'" in browser.title
-    
-    checkbox = browser.find_element_by_name("condition")
-    checkbox.send_keys(Keys.SPACE)
-    checkbox.send_keys(Keys.TAB)
-    checkbox.send_keys(Keys.RETURN)
-    
+
+while outcome is not True:
+    browser.get("https://www.rdv-prefecture.interieur.gouv.fr/rdvpref/reservation/demarche/3823/creneau/")
     try:
+        captchaBox = browser.find_element("name", "captchaUsercode")
+        asyncio.run(notif("CAPTCHA", "Veuillez entrer le captcha"))
+        captcha = input("Entrer le captcha et appuyer sur entrée:\n")
+        captchaBox.send_keys(captcha)
+        captchaBox.send_keys(Keys.RETURN)
+        counter = 0
+    except NoSuchElementException:
+        pass
+
+        browser.get(browser.current_url)
         #Find the radio check for the month of september and click it.
-        box2 = browser.find_element_by_id("planning18380")
-        box2.click()
-    except NoSuchElementException:
-        continue
-        
-        #Confirm the choice and load the next page
-        box2.send_keys(Keys.TAB)
-        box2.send_keys(Keys.TAB)
-        box2.send_keys(Keys.RETURN)
-        
-    try: 
-        #Find the label with the result
-        booking = browser.find_element_by_id("FormBookingCreate")
-    except NoSuchElementException:
-        continue
-    
-    #check for the outcome
-    text = booking.get_attribute('innerText')
-    print(text)
-    
-    if "Il n'existe plus de plage horaire" in text:
-        outcome = False
-    else: 
-        outcome = True
+        try : 
+            button = browser.find_element("xpath", "//span[text()='Suivant']")
+            if button.is_enabled():
+                print("Bouton visible")
+                href_data = button.get_attribute('href')
+                if href_data is None:
+                    is_clickable = False
+                    print("Bouton non cliquable")
+                    browser.refresh()
+                    counter += 1
+                    print("Compteur de rafracissement: ", counter)
+                    sleep(30)      #changer le rafraichissement
+                else:
+                    asyncio.run(notif("RDV TROUVE,", "Veuillez entrer vos informations"))
+                    button.click()
+                    info = input("Entrez vos informations")
+                # break
+        except NoSuchElementException:
+            browser.refresh()
+            print("Navigateur rafraîchi")
+            sleep(2)            
 
-
-# In[ ]:
 
 
 
