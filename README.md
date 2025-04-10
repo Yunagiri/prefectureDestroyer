@@ -15,6 +15,6 @@ Here is a simple python script done with the library selenium that does it for y
     Dans le terminal VS Code, exécuter :
         pip install -r requirements.txt
     Ouvrir le fichier de script .py avec VS Code
-    Lancer le script avec VS Code
+    Lancer le script avec VS Code. 
 
 PS: Il faut renseigner le captcha toutes les 15-30 minutes à peu près
